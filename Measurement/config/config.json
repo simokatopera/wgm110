@@ -1,7 +1,6 @@
 {
-	"EventHubsNamespace": "s-eventhub-ns",
-	"EventHubsHubName": "s-eventhub",
-	"DeviceName": "Device1",
-	"EventHubsKeyName": "s-eventhub",
-	"EventHubsKey": "SsuPaCWrzyrsgOgMuZPLwnatgssNtjGt6pLWC4sGgHo="
+	"EventHubsNamespace": "heatingmon",
+	"EventHubsHubName": "heatingmon",
+	"EventHubsKeyName": "heatingmon",
+    "EventHubsKey": "7yhNelirZY2kBXUAXUsjau3HaYcin6Ut322l5yqk4MI="
 }

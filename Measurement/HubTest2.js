@@ -24,11 +24,13 @@ var eventHubsNamespace = config.EventHubsNamespace,
     eventHubsKeyName = config.EventHubsKeyName,
     eventHubsKey = config.EventHubsKey,
     sasToken = config.SasToken,
-    deviceId = config.DeviceName;
-    loc = config.Location;
-    cust = config.Customer;
+    
+    customerId = config.CustomerId,
+    deviceId = config.DeviceId,
     deviceList = config.Devices;
+    deviceName = config.DeviceNamex;
 
+//console.log('customer id ' + customerId);
 testSendContinuous();
 //testSendPerformance();
 //example1();
@@ -36,30 +38,42 @@ testSendContinuous();
 
 function sendRandomData(silent) {
     var deferral = Q.defer();
-    var d = new Date;
-    var dd = Date.parse(d);
+    var currtimeStr = new Date;
+    var currentTime = Date.parse(currtimeStr);
 
+    /*
+    cust_id smallint
+    device_id int
+    meas_time datetime2
+    save_time datetime2
+    triggering_event smallint
+    sensor0 real
+     ...
+    sensor7 real
+    */
+    var trigger = Math.floor(Math.random() * 5);
     var payload = {
-        //Id: idnumber,
-        Time : dd,
-        Temperature: (prevTemp + Math.random() - 0.5),
-        Humidity: (prevHum + Math.random() - 0.5),
-        Customer: cust,
-        Location: loc,
-        Device: deviceList[0]
+        cust_id: customerId,
+        device_id: deviceId,
+        meas_time : currentTime,
+        // save_time: not done here
+        triggering_event: trigger,
+        sensor0: (prevTemp + Math.random() - 0.5),
+        sensor1: (prevHum + Math.random() - 0.5),
+        sensor2: (prevTemp + Math.random() - 0.5),
     }
     
-    prevHum = payload.Humidity;
-    prevTemp = payload.Temperature;
+    prevHum = payload.sensor1;
+    prevTemp = payload.sensor0;
     idnumber++;
     
     //console.log(payload);
     eventHubs.sendMessage({
         message: payload,
-        deviceId: deviceId,
+        deviceId: deviceName,
     }).then(function () {
-        console.log(payload);
-        if (!silent) console.log('Sent ' + JSON.stringify(payload));
+        //console.log(payload);
+        //if (!silent) console.log('Sent ' + JSON.stringify(payload));
         deferral.resolve();
     }).catch(function (error) {
         if (!silent) console.log('Error sending message: ' + error);
@@ -77,8 +91,8 @@ function testSendContinuous() {
         keyName: eventHubsKeyName,
         key: eventHubsKey
     });
-
-    setInterval(sendRandomData, 10000.0 * 6);
+    sendRandomData();
+    setInterval(sendRandomData, 1000.0 * 10);
 }
 /*
 function testSendPerformance() {

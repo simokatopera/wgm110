@@ -80,7 +80,7 @@ function sendMessage(messageObject) {
         //This allows us to send in a POJSO
         payload = JSON.stringify(message);
     }
-
+//console.log('Device : ' + deviceId + ' xxxxxxxxxxxxxxxxxxxxxxxxxx');
     return send(payload, deviceId);
 }
 
@@ -106,7 +106,7 @@ function send(payload, deviceId) {
       responseData = '';
 
   deferral = Q.defer();
-
+//console.log('!!!!!!!!!------------ deviceid:' + deviceId);
   deviceUri = getDeviceUri(deviceId);
   token = getSasToken(deviceUri);
   //var temp =  deviceId ? '/' + hubName + '/publishers/' + deviceId + '/messages' : '/' + hubName + '/messages';
@@ -123,21 +123,23 @@ function send(payload, deviceId) {
             'Content-Type': 'application/atom+xml;type=entry;charset=utf-8'
     }
   }
-  console.log('-Request options----------------------------------');
+  console.log('\n-Request options----------------------------------');
   console.log(requestOptions);
-  console.log('-Payload------------------------------------------');
+  console.log('\n-Payload------------------------------------------');
   console.log(payload);
   console.log('--------------------------------------------------');
     
   req = https.request(requestOptions, function (res) {
     res.on('data', function (data) {
       responseData += data;
-      console.log('-----------res.on("data")' + data);
+      //console.log('-----------res.on("data")' + data);
     }).on('end', function () {
-        console.log('--------res.on("end")  status:' + res.statusCode + ' responseData:' + responseData);
         if (res.statusCode !== 201) {
+          console.log('--------res.on("end")  status:' + res.statusCode + ' responseData:' + responseData);
           deferral.reject(new Error("Invalid server status: " + res.statusCode + "Message: " + responseData));
           return;
+        } else {
+          console.log('Send succesfull!\n=================================================\n\n\n');
         }
 
         deferral.resolve({ statusCode: res.statusCode, responseData: responseData});
@@ -148,15 +150,15 @@ function send(payload, deviceId) {
   });
     
   req.on('error', function(e){
-        console.log('--------res.on("error")');
+        //console.log('--------res.on("error")');
     	deferral.reject(e);
   });
-  console.log('--------write()');
+  //console.log('--------write()');
 
   req.setSocketKeepAlive(true);
   req.write(payload);
   req.end();
-  console.log('--------end()');
+  //console.log('--------end()');
 
   return deferral.promise;
 }

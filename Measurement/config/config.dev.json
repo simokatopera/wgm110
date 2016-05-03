@@ -1,5 +1,6 @@
 {
-	"Customer": "123456",
-	"Location": "Kukkumavaara",
-	"Devices": ["Device1", "Device2","Device3","Device4"]
+	"CustomerId": "1",
+    "DeviceId": "100",
+    "DeviceName": "Device1",
+	"Devices": ["Dev1", "Dev2","Dev3"]
 }
