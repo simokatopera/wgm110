@@ -7,25 +7,26 @@ var Connection = require('tedious').Connection;
 
 var connection = null;
 var listeningToPort = 8080;
-var dataTable = 'IoTdata2';
+var dataTable = 'MeasuredData';
+var customerTable = 'CustomerData';
 var topAmountOfLines = 500;
 var dataBuffer = [];
-var showSqlMessages = false;
+var showSqlMessages = true;
 var showResultStatus = false;
 var showHttpRequest = true;
 
 
 var config = {
-    userName: 'simo',
-    password: 'Susanna10',
-    server: 'jpc9mrvq4c.database.windows.net',
+    userName: 'hmon',
+    password: 'Heatingmon1',
+    server: 'fyn7a28mhq.database.windows.net',
     // When you connect to Azure SQL Database, you need these next options.
-    options: {encrypt: true, database: 'temperatureDB'}
+    options: {encrypt: true, database: 'HeatingMonDB'}
   };
     
   app.get('/', function(request, response){
     if (showHttpRequest) console.log('---Request:azureServer ----------');
-    response.sendFile('hostingstart.html' , { root : __dirname});
+    response.sendfile('HeatMonitor.html' , { root : __dirname});
   });
   
   app.get('/wakeup', function(request, response){
@@ -148,8 +149,9 @@ var config = {
         c++;
       });
       //console.log(line);
-      var newdata = {Id:line[0], Temperature:line[1], Humidity:line[2], Customer:line[3],
-                     Location:line[4],Device:line[5],SaveTimeStamp:line[6],Time:line[7],SaveDate:line[8]};
+      var newdata = {id:line[0], cust_id:line[1], device_id:line[2], meas_time3:line[3],
+                     save_time:line[4],triggering_event:line[5],
+                     sensor0:line[6],sensor1:line[7],sensor2:line[8],sensor3:line[9]};
       dataBuffer.push(newdata);
       //console.log('Row number:' + count + '  ' + newdata.Id + ' ' + newdata.Temperature + ' ' + newdata.Humidity);
       count++;
@@ -172,8 +174,8 @@ var config = {
     var reqStr = 'SELECT COUNT(*) AS lineCount FROM ' + dataTable;
     var count = 0;
     if (startkey != null && endkey != null) {
-      reqStr += ' WHERE '  + dataTable + '.Time > ' + startkey + ' and ' +
-                             dataTable + '.Time < ' + endkey;
+      reqStr += ' WHERE '  + dataTable + '.meas_time3 > ' + startkey + ' and ' +
+                             dataTable + '.meas_time3 < ' + endkey;
     }
     if (showSqlMessages) console.log("Sending:" + reqStr);
         
@@ -205,32 +207,35 @@ var config = {
   function createSelectByDatesMessage(startkey, endkey, dTable) {
     var reqStr = '';
     if (startkey != 0 && endkey != 0) {
-      reqStr = 'SELECT TOP ' + topAmountOfLines + ' ' + dTable + '.Id, ' +
-                                          dTable + '.Temperature, ' +
-                                          dTable + '.Humidity, ' + 
-                                          dTable + '.Customer, ' +
-                                          dTable + '.Location, ' +
-                                          dTable + '.Device, ' + 
-                                          dTable + '.SaveTimeStamp, ' +
-                                          dTable + '.Time, ' + 
-                                          dTable + '.SaveDate ' +
+      reqStr = 'SELECT TOP ' + topAmountOfLines + 
+                                    ' ' + dTable + '.id, ' +
+                                          dTable + '.cust_id, ' +
+                                          dTable + '.device_id, ' +
+                                          dTable + '.meas_time3, ' + 
+                                          dTable + '.save_time, ' +
+                                          dTable + '.triggering_event, ' +
+                                          dTable + '.sensor0, ' + 
+                                          dTable + '.sensor1, ' +
+                                          dTable + '.sensor2, ' + 
+                                          dTable + '.sensor3 ' +
 		                      'FROM '   + dTable + ' ' +
-                              'WHERE '  + dTable + '.Time > ' + startkey + ' and ' +
-                                          dTable + '.Time < ' + endkey + ' ' +
-                              'ORDER BY SaveTimeStamp DESC';
+                              'WHERE '  + dTable + '.meas_time3 > ' + startkey + ' and ' +
+                                          dTable + '.meas_time3 < ' + endkey + ' ' +
+                              'ORDER BY save_time DESC';
     } else {
       // get latest lines
-      reqStr = 'SELECT TOP ' + 50 + ' ' + dTable + '.Id, ' +
-                                          dTable + '.Temperature, ' +
-                                          dTable + '.Humidity, ' + 
-                                          dTable + '.Customer, ' +
-                                          dTable + '.Location, ' +
-                                          dTable + '.Device, ' + 
-                                          dTable + '.SaveTimeStamp, ' +
-                                          dTable + '.Time, ' + 
-                                          dTable + '.SaveDate ' +
+      reqStr = 'SELECT TOP ' + 50 + ' ' + dTable + '.id, ' +
+                                          dTable + '.cust_id, ' +
+                                          dTable + '.device_id, ' +
+                                          dTable + '.meas_time3, ' + 
+                                          dTable + '.save_time, ' +
+                                          dTable + '.triggering_event, ' +
+                                          dTable + '.sensor0, ' + 
+                                          dTable + '.sensor1, ' +
+                                          dTable + '.sensor2, ' + 
+                                          dTable + '.sensor3 ' +
 		                      'FROM '   + dTable + ' ' +
-                              'ORDER BY SaveTimeStamp DESC';
+                              'ORDER BY save_time DESC';
     }
     
     return (reqStr);
@@ -241,14 +246,16 @@ var config = {
     Function executes given database reques and send results back
     as json message.
     */
-    var dTable = 'CustomerInfo';
-    var reqStr = 'SELECT ' + ' ' + dTable + '.Id, ' +
-                                   dTable + '.CustomerId, ' +
-                                   dTable + '.CustomerName, ' + 
-                                   dTable + '.CustomerStreetAddress, ' +
-                                   dTable + '.DeviceList ' +
+    var dTable = customerTable;
+    var reqStr = 'SELECT ' + ' ' + dTable + '.cust_id, ' +
+                                   dTable + '.cust_subscription_plan, ' +
+                                   dTable + '.cust_name, ' + 
+                                   dTable + '.cust_address, ' +
+                                   dTable + '.cust_city, ' +
+                                   dTable + '.cust_zip_code, ' +
+                                   dTable + '.cust_tel ' +
 		                      'FROM ' + dTable + ' ' +
-                              'ORDER BY CustomerName ASC';    
+                              'ORDER BY cust_name ASC';    
     var result = [];
     var count = 0;
     var line = [];
@@ -275,7 +282,8 @@ var config = {
         c++;
       });
       //console.log(line);
-      var newdata = {Id:line[0], CustomerId:line[1], CustomerName:line[2], CustomerStreetAddress:line[3], DeviceList:line[4]};
+      var newdata = {cust_id:line[0], cust_subscription_plan:line[1], cust_name:line[2], 
+                     cust_address:line[3], cust_city:line[4], cust_zip_code:line[5], cust_tel:line[6]};
                      
       dataBuffer.push(newdata);
       //console.log('Row number:' + count + '  ' + newdata.Id + ' ' + newdata.Temperature + ' ' + newdata.Humidity);
@@ -296,9 +304,11 @@ connection.on('connect', function(err) {
   // If no error, then good to proceed.
   console.log("Connected to Azure Database");
   // start listening port
-  console.log('Listening on port ' + process.env.PORT);//listeningToPort);
+  //console.log('Listening on port ' + process.env.PORT);
+  console.log('Listening on port ' + listeningToPort);
   try {
-    app.listen(process.env.PORT);// || listeningToPort);
+    //app.listen(process.env.PORT);
+    app.listen(listeningToPort);
   }
   catch (err) {
     console.log('Error in server sw:' + err);

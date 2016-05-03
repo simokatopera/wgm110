@@ -9,7 +9,7 @@
 
 
 
-  <title>AzureTool</title>
+  <title>HeatingMonitor</title>
 
 <style>
   body {
@@ -43,7 +43,7 @@
 <!-- ================================ -->
  
 <body>
-  <h1> Azure Tool for Reading Temperature DB</h1>
+  <h1>Heating Monitor</h1>
     
   <form id="azureForm" onsubmit="return false;">
      <table>
@@ -74,15 +74,17 @@
     <tr>
     <td>Customer Id:<td><input  type="text" id="modifyCustomerId" size="30" maxlength="30" name="modifyCustomerId" readonly>
     <tr>
+    <td>Subscription Plan:<td><input  type="text" id="modifySubscriptionPlan" size="30" maxlength="30" name="modifySubscriptionPlan">
+    <tr>
     <td>Customer Name:<td><input  type="text" id="modifyCustomerName" size="30" maxlength="30" name="modifyCustomerName">
     <tr>
-    <td>Street Address:<td><input  type="text" id="modifyCustomerStreetAddress" size="30" maxlength="30" name="modifyCustomerStreetAddress">
+    <td>Customer Address:<td><input  type="text" id="modifyCustomerAddress" size="30" maxlength="30" name="modifyCustomerAddress">
     <tr>
-    <td>Devicelist:<td><input  type="text" id="modifyCustomerDevices" size="30" maxlength="30" name="modifyCustomerDevices">
+    <td>City:<td><input  type="text" id="modifyCustomerCity" size="30" maxlength="30" name="modifyCustomerCity">
     <tr>
-    <td>Telephone:<td><input  type="text" id="modifyCustomerTelephone" size="30" maxlength="30" name="modifyCustomerTelephone">
+    <td>Zip Code:<td><input  type="text" id="modifyCustomerZip" size="30" maxlength="30" name="modifyCustomerZip">
     <tr>
-    <td>Email:<td><input  type="text" id="modifyCustomerEmail" size="30" maxlength="30" name="modifyCustomerEmail">
+    <td>Telepohone:<td><input  type="text" id="modifyCustomerTelephone" size="30" maxlength="30" name="modifyCustomerTelephone">
     <tr>
     <tr>
     <td><button id="saveChanges" onclick="Funct_saveChanges()">Save Changes</button>
@@ -125,10 +127,13 @@
     document.getElementById("userEditForm").style.display = "none";
   }
   function showUserEditForm(cells) {
-    document.forms.userEditForm.modifyCustomerId.value = cells[2].innerText;
+    document.forms.userEditForm.modifyCustomerId.value = cells[1].innerText;
+    document.forms.userEditForm.modifySubscriptionPlan.value = cells[2].innerText;
     document.forms.userEditForm.modifyCustomerName.value = cells[3].innerText;
-    document.forms.userEditForm.modifyCustomerStreetAddress.value = cells[4].innerText;
-    document.forms.userEditForm.modifyCustomerDevices.value = cells[5].innerText;
+    document.forms.userEditForm.modifyCustomerAddress.value = cells[4].innerText;
+    document.forms.userEditForm.modifyCustomerCity.value = cells[5].innerText;
+    document.forms.userEditForm.modifyCustomerZip.value = cells[6].innerText;
+    document.forms.userEditForm.modifyCustomerTelephone.value = cells[7].innerText;
     document.getElementById("userEditForm").style.display = "";
   }
   function hideAddNewNewCustomer() {
