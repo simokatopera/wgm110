@@ -1,0 +1,7 @@
+{
+	"EventHubsNamespace": "s-eventhub-ns",
+	"EventHubsHubName": "s-eventhub",
+	"DeviceName": "Device1",
+	"EventHubsKeyName": "s-eventhub",
+	"EventHubsKey": "SsuPaCWrzyrsgOgMuZPLwnatgssNtjGt6pLWC4sGgHo="
+}

@@ -1,0 +1,5 @@
+{
+	"Customer": "123456",
+	"Location": "Kukkumavaara",
+	"Devices": ["Device1", "Device2","Device3","Device4"]
+}
