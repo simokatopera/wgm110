@@ -7,8 +7,8 @@ var Connection = require('tedious').Connection;
 
 var connection = null;
 var listeningToPort = 8080;
-var dataTable = 'MeasuredData';
-var customerTable = 'CustomerData';
+var dataTable = 'MEASUREMENTS';
+var customerTable = 'CUSTOMER_DATA';
 var topAmountOfLines = 500;
 var dataBuffer = [];
 var showSqlMessages = true;
@@ -43,9 +43,11 @@ var config = {
     var temp = new Array();
     var start = req.query.start;
     var end = req.query.end;
+    var custid = req.query.custid;
+    if (custid === 'undefined') custid = '';
 
-    if (showHttpRequest) console.log('---Request:index:"' + start + '"-"' + end + '"');
-    var dBrequest = createSelectByDatesMessage(start, end, dataTable);
+    if (showHttpRequest) console.log('---Request:index:"' + custid + '"/"'  + start + '"-"' + end + '"');
+    var dBrequest = createSelectByDatesMessage(custid, start, end, dataTable);
     while (dataBuffer.length > 0) {
       dataBuffer.pop();
     }
@@ -149,7 +151,7 @@ var config = {
         c++;
       });
       //console.log(line);
-      var newdata = {id:line[0], cust_id:line[1], device_id:line[2], meas_time3:line[3],
+      var newdata = {id:line[0], cust_id:line[1], device_id:line[2], meas_time:line[3],
                      save_time:line[4],triggering_event:line[5],
                      sensor0:line[6],sensor1:line[7],sensor2:line[8],sensor3:line[9]};
       dataBuffer.push(newdata);
@@ -174,8 +176,8 @@ var config = {
     var reqStr = 'SELECT COUNT(*) AS lineCount FROM ' + dataTable;
     var count = 0;
     if (startkey != null && endkey != null) {
-      reqStr += ' WHERE '  + dataTable + '.meas_time3 > ' + startkey + ' and ' +
-                             dataTable + '.meas_time3 < ' + endkey;
+      reqStr += ' WHERE '  + dataTable + '.meas_time > ' + startkey + ' and ' +
+                             dataTable + '.meas_time < ' + endkey;
     }
     if (showSqlMessages) console.log("Sending:" + reqStr);
         
@@ -204,14 +206,14 @@ var config = {
     connection.execSql(request);
   }
 
-  function createSelectByDatesMessage(startkey, endkey, dTable) {
+  function createSelectByDatesMessage(custid, startkey, endkey, dTable) {
     var reqStr = '';
     if (startkey != 0 && endkey != 0) {
       reqStr = 'SELECT TOP ' + topAmountOfLines + 
                                     ' ' + dTable + '.id, ' +
                                           dTable + '.cust_id, ' +
                                           dTable + '.device_id, ' +
-                                          dTable + '.meas_time3, ' + 
+                                          dTable + '.meas_time, ' + 
                                           dTable + '.save_time, ' +
                                           dTable + '.triggering_event, ' +
                                           dTable + '.sensor0, ' + 
@@ -219,15 +221,19 @@ var config = {
                                           dTable + '.sensor2, ' + 
                                           dTable + '.sensor3 ' +
 		                      'FROM '   + dTable + ' ' +
-                              'WHERE '  + dTable + '.meas_time3 > ' + startkey + ' and ' +
-                                          dTable + '.meas_time3 < ' + endkey + ' ' +
-                              'ORDER BY save_time DESC';
+                              'WHERE '  + dTable + '.meas_time > ' + startkey + ' and ' +
+                                          dTable + '.meas_time < ' + endkey;
+                if (custid != ''){        
+                                          reqStr += ' and ' +
+                                          dTable + '.cust_id = ' + custid;
+                }
+                               reqStr += ' ORDER BY save_time DESC';
     } else {
       // get latest lines
       reqStr = 'SELECT TOP ' + 50 + ' ' + dTable + '.id, ' +
                                           dTable + '.cust_id, ' +
                                           dTable + '.device_id, ' +
-                                          dTable + '.meas_time3, ' + 
+                                          dTable + '.meas_time, ' + 
                                           dTable + '.save_time, ' +
                                           dTable + '.triggering_event, ' +
                                           dTable + '.sensor0, ' + 
@@ -297,6 +303,12 @@ var config = {
     connection.execSql(request);
   }
   
+var args = process.argv.slice(2);
+var portToUse = process.env.PORT;
+if (typeof args[0] !== 'undefined' && args[0]) {
+  portToUse = (portToUse || args[0]);
+}
+
   
 // Connect to database
 connection = new Connection(config);
@@ -304,11 +316,13 @@ connection.on('connect', function(err) {
   // If no error, then good to proceed.
   console.log("Connected to Azure Database");
   // start listening port
-  //console.log('Listening on port ' + process.env.PORT);
-  console.log('Listening on port ' + listeningToPort);
+  //console.log('Listening on process.env.PORT: ' + process.env.PORT);
+  //console.log('Listening on port ' + listeningToPort);
+  console.log('Listening on port: ' + portToUse);
   try {
     //app.listen(process.env.PORT);
-    app.listen(listeningToPort);
+    //app.listen(listeningToPort);
+    app.listen(portToUse);
   }
   catch (err) {
     console.log('Error in server sw:' + err);

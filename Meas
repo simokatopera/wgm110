@@ -1,0 +1,11 @@
+<NotepadPlus>
+    <Session activeView="0">
+        <mainView activeIndex="0">
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="1008" startPos="0" endPos="0" selMode="0" lang="JavaScript" encoding="-1" filename="C:\Users\Simo\SWProjects\HeatMon\Measurement\client.js" backupFilePath="" originalFileLastModifTimestamp="1461418083" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="864" startPos="0" endPos="0" selMode="0" lang="JavaScript" encoding="-1" filename="C:\Users\Simo\SWProjects\HeatMon\Measurement\HubTest2.js" backupFilePath="" originalFileLastModifTimestamp="1461873243" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="1" startPos="0" endPos="0" selMode="0" lang="JSON" encoding="-1" filename="C:\Users\Simo\SWProjects\HeatMon\Measurement\config\config.dev.json" backupFilePath="" originalFileLastModifTimestamp="1461168358" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="594" startPos="0" endPos="0" selMode="0" lang="JSON" encoding="-1" filename="C:\Users\Simo\SWProjects\HeatMon\Measurement\config\config.json" backupFilePath="" originalFileLastModifTimestamp="1461147087" />
+        </mainView>
+        <subView activeIndex="0" />
+    </Session>
+</NotepadPlus>

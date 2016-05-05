@@ -64,16 +64,21 @@ function sendRandomData(silent) {
      ...
     sensor7 real
     */
+    var tempCustid = Math.floor(Math.random() * 5);
+    //tempCustid = 1;
     var trigger = Math.floor(Math.random() * 5);
     var payload = {
-        cust_id: customerId,
+        cust_id: tempCustid, //customerId,
         device_id: deviceId,
         meas_time : currentTime,
         // save_time: not done here
         triggering_event: trigger,
-        sensor0: (prevTemp + Math.random() - 0.5),
-        sensor1: (prevHum + Math.random() - 0.5),
-        sensor2: (prevTemp + Math.random() - 0.5),
+        sensor0: (prevTemp + 3 * (Math.random() - 0.5)),
+        sensor1: (prevHum + 2 * (Math.random() - 0.5)),
+        sensor2: (prevTemp + 4 * (Math.random() - 0.5)),
+    }
+    if (tempCustid != 1){
+      payload.sensor3 = prevTemp + 5 * (Math.random() - 0.5);
     }
     
     prevHum = payload.sensor1;
