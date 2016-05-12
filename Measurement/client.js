@@ -109,6 +109,7 @@ function send(payload, deviceId) {
 //console.log('!!!!!!!!!------------ deviceid:' + deviceId);
   deviceUri = getDeviceUri(deviceId);
   token = getSasToken(deviceUri);
+  console.log(token);
   //var temp =  deviceId ? '/' + hubName + '/publishers/' + deviceId + '/messages' : '/' + hubName + '/messages';
   //console.log(temp);
     
@@ -166,6 +167,5 @@ function send(payload, deviceId) {
 exports.init = init;
 exports.sendMessage = sendMessage;
 exports.sendMessages = sendMessages;
-
 
 

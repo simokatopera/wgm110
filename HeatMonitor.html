@@ -29,6 +29,7 @@
   #customerData tbody{ 
     background-color:lightblue; 
     color:blue;
+    text-align:center;  
   }
   button {
     background-color:blue;
@@ -492,7 +493,15 @@
           }
           else savedData = null;
         } else {
-           showMessage('Empty data received');
+           if (data.length == 1) {
+             var keys = Object.keys(data[0]);
+             var vals = Object.keys(data[0]).map(function (key) {
+               showMessage(keys[0] + ':' + data[0][key]);
+             });
+
+           } else {
+             showMessage('Empty data received');
+           }
         }
       }
     }
