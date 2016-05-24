@@ -28,8 +28,8 @@ var eventHubsNamespace = config.EventHubsNamespace,
     customerId = config.CustomerId,
     deviceId = config.DeviceId,
     deviceList = config.Devices;
-    deviceName = config.DeviceNamex;
-
+    //deviceName = config.DeviceName;
+    deviceName = customerId + '-' + deviceId;
 //console.log('customer id ' + customerId);
 testSendContinuous();
 //testSendPerformance();

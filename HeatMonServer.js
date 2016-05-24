@@ -3,8 +3,10 @@
 var express = require('express');
 var app = express();
 var sql = require('./sqlServer');
+//var https = require('https');
+var http = require('http');
+const fs = require('fs');
 
-var listeningToPort = 8080;
 var showHttpRequest = true;
 var errorMessage = {};
 
@@ -20,9 +22,10 @@ var DatabaseConfig = {
 //    Api interface functions
 // ------------------------------------------------------------
   
+  
   app.get('/', function(request, response){
     if (showHttpRequest) console.log('---Request:azureServer ----------');
-    response.sendfile('HeatMonitor.html' , { root : __dirname});
+    response.sendFile('HeatMonitor.html' , { root : __dirname});
   });
   
   app.get('/wakeup', function(request, response){
@@ -77,6 +80,37 @@ var DatabaseConfig = {
     }
   });
   
+  app.get('/kukku', function(req, res) {
+    console.log('kukkuuu');
+    res.sendFile('empty.html' , { root : __dirname});
+  });
+
+  app.get('/renew', function(req, res) {
+    var params;
+    params = getQueryParams(req.query, {'id':true});
+    var errorMsg = checkParameterStatus(params)
+    if (errorMsg == null) {
+      showDebugMsg('/renew', params);
+      //sql.getCount(0, params, function(data){res.json(data);});
+      console.log(req.rawHeaders);
+      res.json(req.rawHeaders);
+      
+      //var fs = require('fs');
+      //fs.writeFile("header.txt", JSON.stringify(req), function(err) {
+      //  if(err) {
+      //    return console.log(err);
+      //  }
+      //  console.log("The file was saved!");
+      //}); 
+      //res.json({Key:req.secure});
+                  //  'SharedAccessSignature sr=https%3A%2F%2Fheatingmon.servicebu' +
+                  //  's.windows.net%2Fheatingmon%2Fpublishers%2F1-100%2Fmessages&sig=ymscqlt35A1%2BOV2' +
+                  //  'bi8%2B7o3Ve1cGOkaKc3bXms5zKLbQ%3D&se=1464361807&skn=heatingmon'});
+    }
+    else {
+      res.json(errorMsg);
+    }
+  });
   
 // ------------------------------------------------------------
 //    Private functions
@@ -134,10 +168,21 @@ var DatabaseConfig = {
   function isEmpty(obj) {
     return Object.keys(obj).length === 0;
   }
-
+  
+  //app.configure(function(){
+  //  app.use(app.router);
+  //});
+  
 // ------------------------------------------------------------
 //    M A I N   Program
 // ------------------------------------------------------------
+
+  //const options = {
+  //  key: fs.readFileSync('13141453_localhost.key'),
+  //  cert: fs.readFileSync('13141453_localhost.cert')
+  //};
+  //var privateKey = fs.readFileSync('13141453_localhost.key').toString();
+  //var certificate = fs.readFileSync('13141453_localhost.cert').toString();  
   
   var args = process.argv.slice(2);
   var portToUse = process.env.PORT;
@@ -146,7 +191,22 @@ var DatabaseConfig = {
   }
 
   sql.createConnection(DatabaseConfig);
-
+  
+  
+  
+  console.log('Connecting to port: ' + portToUse);
+  //server = https.createServer(options, app).listen(portToUse, HOST);
+  server = http.createServer(app).listen(portToUse);
+  
+  
+  /*
+  https.createServer(options, (req, res) => {
+    res.writeHead(201);
+    res.end('hello world\n');
+    console.log('Request got');
+  }).listen(portToUse);
+  */
+/*
   try {
     console.log('Listening on port: ' + portToUse);
     app.listen(portToUse);
@@ -154,7 +214,7 @@ var DatabaseConfig = {
   catch (err) {
     console.log('Error in server sw:' + err);
   }
-
+*/
   
 
 

@@ -1,6 +1,6 @@
 {
 	"CustomerId": "1",
     "DeviceId": "100",
-    "DeviceName": "Device1",
+    "DeviceName": "notused",
 	"Devices": ["Dev1", "Dev2","Dev3"]
 }

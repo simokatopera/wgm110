@@ -88,7 +88,6 @@ function sendMessages(messageObject) {
     var messages = messageObject.messages,
 		deviceId = messageObject.deviceId,
         payload;
-
     if (messages.length === 0)
         throw new Error("Given argument contains no messages!");
     
@@ -108,11 +107,12 @@ function send(payload, deviceId) {
   deferral = Q.defer();
 //console.log('!!!!!!!!!------------ deviceid:' + deviceId);
   deviceUri = getDeviceUri(deviceId);
+console.log('Device Uri in token calc:' + deviceUri);
   token = getSasToken(deviceUri);
   console.log(token);
   //var temp =  deviceId ? '/' + hubName + '/publishers/' + deviceId + '/messages' : '/' + hubName + '/messages';
   //console.log(temp);
-    
+
   requestOptions = {
     hostname: namespace + '.servicebus.windows.net',
     port: 443,

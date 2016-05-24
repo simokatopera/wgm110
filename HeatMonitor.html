@@ -61,9 +61,9 @@
   <form id="azureForm" onsubmit="return false;">
      <table>
      <tr>
-     <td>Give dates in format:<td> ddmmyyyy
-     <tr>
      <td>Customer Id (id/empty):<td><input type="numbers" id="inputCustomerId" size="6" maxlength="6" name="inputCustomerId">
+     <tr>
+     <td>Give dates in format:<td> ddmmyyyy
      <tr>
      <td>Start date:<td><input type="numbers" id="inputStartDate" size="10" maxlength="10" name="inputStartDate">
      <tr>
@@ -106,18 +106,18 @@
     <tr>
     <tr>
     <td><button id="saveChanges" onclick="Funct_saveChanges()">Save Changes</button>
+    <tr>
+    <td><button id="renew" onclick="Funct_renew()">Renew (trial)</button>
     </table>
    </fieldset>
   </form>
   <br>
   
   <button id="addCustomer" onclick="Funct_addCustomer()">Add New Customer</button>
- 
+  <div id="tempdata"></div>
   <table id="customerData" border="1"> </table>
   
 <script>
-  var USE_PHP = false;
-  
   var showSentMsg = true;
   
   var collectData = false;
@@ -366,28 +366,11 @@
         table.deleteRow(0);
       }      
       clearCharts();
-	  if (USE_PHP) {
-	    var requestMessage = '';
-        requestMsg = 'azureServer.php?command=index' + '&start=' + d.startDate + '&end=' + d.endDate + '&rnd=' + Math.random();
-        xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function() {
-            var jsonData = null;
-            if (xmlhttp.readyState == 4) {
-              if (xmlhttp.status == 200) {
-                showMessage(xmlhttp.responseText);
-              }
-            }
-        };
-        if (showSentMsg) showCommand(requestMsg);
-        xmlhttp.open("GET", requestMsg, true);
-        xmlhttp.send();	  
-	  }else {
         xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange = callbackGetData;
         if (showSentMsg) showCommand(requestMsg);
         xmlhttp.open("GET", requestMsg, true);
         xmlhttp.send();
-	  }
       }else {
       showMessage('Invalid input data given!');
     }
@@ -513,38 +496,16 @@ var countMode = 0;
     hideUserEditForm();
     var d = getDates();
 
-     if (USE_PHP) {
-	    //ar requestMessage = '';
-        //requestMsg = 'azureServer.php?command=index' + '&start=' + d.startDate + '&end=' + d.endDate + '&rnd=' + Math.random();
-        var requestMsg = 'azureServer.php?command=count' + '&rnd=' + Math.random();
-        if (mode != 0 && d.status == true){
-          requestMsg = 'azureServer.php?command=count' + '&start=' + d.startDate + '&end=' + d.endDate + '&rnd=' + Math.random();
-        }
-        xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function() {
-            var jsonData = null;
-            if (xmlhttp.readyState == 4) {
-              if (xmlhttp.status == 200) {
-                showMessage(xmlhttp.responseText);
-              }
-            }
-        };
-        if (showSentMsg) showCommand(requestMsg);
-        xmlhttp.open("GET", requestMsg, true);
-        xmlhttp.send();	  
-	  
-	}else {
-      var requestMsg = 'count' + '?rnd=' + Math.random();
-      if (mode != 0 && d.status == true){
-        requestMsg = 'count' + '?start=' + d.startDate + '&end=' + d.endDate + '&rnd=' + Math.random();
-      }
-      //showMessage(requestMsg);
-      xmlhttp = new XMLHttpRequest();
-      xmlhttp.onreadystatechange = callbackGetCount;
-      if (showSentMsg) showCommand(requestMsg);
-      xmlhttp.open("GET", requestMsg, true);
-      xmlhttp.send();
-	}
+    var requestMsg = 'count' + '?rnd=' + Math.random();
+    if (mode != 0 && d.status == true){
+      requestMsg = 'count' + '?start=' + d.startDate + '&end=' + d.endDate + '&rnd=' + Math.random();
+    }
+    //showMessage(requestMsg);
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackGetCount;
+    if (showSentMsg) showCommand(requestMsg);
+    xmlhttp.open("GET", requestMsg, true);
+    xmlhttp.send();
   }
  
   function callbackGetCount() {
@@ -574,17 +535,13 @@ var countMode = 0;
         table.deleteRow(0);
       }      
       
-	  if (USE_PHP) {
-	  
-	  }else {
-        xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = callbackGetData;
-	    var requestMsg = 'index' + '?start=' + 0 + '&end=' + 0 + '&rnd=' + Math.random();
-	    if (showSentMsg) showCommand(requestMsg);
-        xmlhttp.open("GET", requestMsg, true);
+      xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = callbackGetData;
+      var requestMsg = 'index' + '?start=' + 0 + '&end=' + 0 + '&rnd=' + Math.random();
+      if (showSentMsg) showCommand(requestMsg);
+      xmlhttp.open("GET", requestMsg, true);
 
-        xmlhttp.send();
-      }
+      xmlhttp.send();
     }else {
       showMessage('Invalid dates given!');
     }
@@ -597,6 +554,25 @@ function Funct_addCustomer() {
 function Funct_saveChanges() {
   alert('Not implemented ;\)');
 }
+
+function Funct_renew() {
+  xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = callbackRenew;
+  var requestMsg = 'renew' + '?id=' + 'kukku' + '&rnd=' + Math.random();
+  if (showSentMsg) showCommand(requestMsg);
+  xmlhttp.open("GET", requestMsg, true);
+
+  xmlhttp.send();
+}
+function callbackRenew() {
+    if (xmlhttp.readyState == 4) {
+      if(xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        //showMessage(data);
+        document.getElementById('tempdata').innerText = data;
+      }
+    }
+  }    
 
 function Funct_getCustomerInfo() {
     clearMessage();
@@ -612,17 +588,13 @@ function Funct_getCustomerInfo() {
         table.deleteRow(0);
       }      
       
-	  if (USE_PHP) {
-	  
-	  }else {
-        xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = callbackGetData;
-	    var requestMsg = 'customer' + '?name=' + '' + '&id=' + '' + '&rnd=' + Math.random();
-        if (showSentMsg) showCommand(requestMsg);
-        xmlhttp.open("GET", requestMsg, true);
+      xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = callbackGetData;
+      var requestMsg = 'customer' + '?name=' + '' + '&id=' + '' + '&rnd=' + Math.random();
+      if (showSentMsg) showCommand(requestMsg);
+      xmlhttp.open("GET", requestMsg, true);
 
-        xmlhttp.send();
-	  }
+      xmlhttp.send();
       collectData = true;
     }else {
       showMessage('Invalid dates given!');
