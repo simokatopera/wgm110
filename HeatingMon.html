@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fi">
+<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+
+<!--------------------------->
+<head>
+
+  <title> UI kokeilu </title>
+
+  
+<!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/jquery.canvasjs.min.js"></script>  
+  
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.min.js"></script>
+  
+  <div class="container">
+    <h1>  </h1>
+  </div>
+
+</head>
+
+<style>
+
+html { height: 100%; }
+
+body { 
+  background-color:white; 
+  color:black;
+  background:  url('images.jpg') no-repeat left;
+  background-position: 50px 200px;
+  }
+
+.navbar{
+  background-color:rgb(50,50,255); 
+}
+.navbar>.container-fluid>ul>li>a{
+  background-color:rgb(0,50,200); 
+  color:ligthgray;
+}
+.navbar>.container-fluid>div>a
+{
+  background-color:white; 
+  color:blue;
+}
+.navbar>.container-fluid>ul>li>ul>li>a
+{
+  background-color:white; 
+  color:blue;
+}
+#messages { 
+  background-color:yellow; 
+  color:red; 
+}
+img.centerImage
+{
+display:block;
+text-align:center;
+    margin-left: auto;
+    margin-right: auto 
+}
+
+</style>
+
+
+<body>
+
+
+<nav class="navbar">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="">Rekijoki Electronics Oy</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li><a onclick="show_div('HomeDiv')">Home</a></li>
+      <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="">Business
+        <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li><a id="Page1">Page 1-1</a></li>
+          <li><a id="Page2">Page 1-2</a></li>
+          <li><a id="Page3">Page 1-3</a></li> 
+        </ul>
+      </li>
+      <li> <a onclick="show_div('ProductsDiv')">Products</a></li> 
+      <li> <a onclick="show_div('NewsDiv')">News</a></li> 
+      <li><a onclick="show_div('AboutDiv')">About</a></li> 
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+      <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+      <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+    </ul>    
+  </div>
+</nav>
+
+  <div id="messages"></div>
+  
+  <div id="HomeDiv">
+    <h1>Home page</h1>  <br> <br> <br>
+    <img src="images.png" class="centerImage" alt="smartsalo">
+  </div>
+  <div id="Page1Div"  style="display:none">
+    Page1 page
+  </div>
+  <div id="Page2Div"  style="display:none">
+    Page2 page
+  </div>
+  <div id="Page3Div"  style="display:none">
+    Page3 page
+  </div>
+  <div id="NewsDiv"  style="display:none">
+    News page
+  </div>
+  <div id="AboutDiv"  style="display:none">
+    About page
+  </div>
+  <div id="ProductsDiv"  style="display:none">
+    Products page <br><br>
+    <img src="gecko.jpg" alt="Gecko">
+  </div>
+</body>
+
+<script>
+
+function show_div(divName) {
+  document.getElementById('HomeDiv').style.display = 'none';
+  document.getElementById('Page1Div').style.display = 'none';
+  document.getElementById('Page2Div').style.display = 'none';
+  document.getElementById('Page3Div').style.display = 'none';
+  document.getElementById('NewsDiv').style.display = 'none';
+  document.getElementById('AboutDiv').style.display = 'none';
+  document.getElementById('ProductsDiv').style.display = 'none';
+  document.getElementById(divName).style.display = '';
+}
+
+$("#Page1").click(function() {
+  show_div('Page1Div');
+});
+$("#Page2").click(function() {
+  show_div('Page2Div');
+});
+$("#Page3").click(function() {
+  show_div('Page3Div');
+});
+
+// Variable definitions
+
+
+// Functions ----------------------------------
+
+
+$(window).load(function(){
+// At startup, this loads gameInfo from statistics source
+  $(function(){
+    //document.body.style.backgroundImage = "url(images.jpg)";
+    //document.body.style.backgroundImage.transparent = 50%;
+    document.getElementById('messages').style.color
+  })
+});
+
+
+</script>
+<!----------------------------------------------------------->
+<!--------------------------->
+  
+
+<!--------------------------->
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<!--------------------------->
+
+</html>
+
+
+
+
