@@ -3,9 +3,32 @@
 <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
 
 <!--------------------------->
+<!--
+https://azure.microsoft.com/en-us/documentation/articles/app-service-mobile-how-to-configure-microsoft-authentication/
+HeatingMonitor Registration
+Name:HeatingMonitor
+Application id: 102b3948-68c0-44e5-b10a-3a0bbdcf9cbd
+Redirect Uri: http://heatingmon.azurewebsites.net
+Password:NMSxaUNOV7DYvUkRYOuae6z
+Note:
+
+Your redirect URI is the URL of your application appended with the path, /.auth/login/microsoftaccount/callback. For example, https://contoso.azurewebsites.net/.auth/login/microsoftaccount/callback.
+Make sure that you are using the HTTPS scheme.
+
+
+https://login.live.com/err.srf?lc=1035
+#error=invalid_request&error_description=The+provided+value+for+the+input+parameter+'redirect_uri'+is+not+valid.+
+The+expected+value+is+'https://login.live.com/oauth20_desktop.srf'+or+
+a+URL+which+matches+the+redirect+URI+registered+for+this+client+application.&
+state=nonce%3de599313de7034b5480e56896a22919ae_20160622104516%26redir%3d/
+
+
+2fc2f8b6-e3b9-4095-9643-94bb9d3bb64a
+-->
+
 <head>
 
-  <title> UI kokeilu </title>
+  <title>Salo Radiotele</title>
 
   
 <!-- Latest compiled and minified CSS -->
@@ -34,7 +57,7 @@ html { height: 100%; }
 body { 
   background-color:white; 
   color:black;
-  background:  url('images.jpg') no-repeat left;
+  background:  url('bg.jpg') repeat left;
   background-position: 50px 200px;
   }
 
@@ -43,7 +66,7 @@ body {
 }
 .navbar>.container-fluid>ul>li>a{
   background-color:rgb(0,50,200); 
-  color:ligthgray;
+  color:red;
 }
 .navbar>.container-fluid>div>a
 {
@@ -66,7 +89,41 @@ text-align:center;
     margin-left: auto;
     margin-right: auto 
 }
+  body {
+    //background-color:lightgreen; 
+  }
+  h1 {
+    color:blue;
+  }
+  #msg { 
+    color:red; 
+  }
 
+  #customerData thead { 
+    background-color:blue; 
+    color:white; 
+  }
+  #customerData tbody{ 
+    background-color:lightblue; 
+    color:blue;
+    text-align:center;  
+  }
+  button {
+    background-color:blue;
+    color:white;
+  }
+  fieldset {
+    background-color:lightblue;
+  }
+#azureForm {
+    float:left;
+}
+#chartContainer {
+    float:left;
+}
+#msg {
+    clear:both;
+}
 </style>
 
 
@@ -76,7 +133,7 @@ text-align:center;
 <nav class="navbar">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="">Rekijoki Electronics Oy</a>
+      <a class="navbar-brand" href="">Salo Radiotele</a>
     </div>
     <ul class="nav navbar-nav">
       <li><a onclick="show_div('HomeDiv')">Home</a></li>
@@ -84,14 +141,15 @@ text-align:center;
         <a class="dropdown-toggle" data-toggle="dropdown" href="">Business
         <span class="caret"></span></a>
         <ul class="dropdown-menu">
-          <li><a id="Page1">Page 1-1</a></li>
+          <li><a id="Page1">HeatingMonitor</a></li>
           <li><a id="Page2">Page 1-2</a></li>
           <li><a id="Page3">Page 1-3</a></li> 
         </ul>
       </li>
-      <li> <a onclick="show_div('ProductsDiv')">Products</a></li> 
-      <li> <a onclick="show_div('NewsDiv')">News</a></li> 
+      <li><a onclick="show_div('ProductsDiv')">Products</a></li> 
+      <li><a onclick="show_div('NewsDiv')">News</a></li> 
       <li><a onclick="show_div('AboutDiv')">About</a></li> 
+      <li><a onclick="showUserName()" id="LoginName">xxxxx</a></li> 
     </ul>
     <ul class="nav navbar-nav navbar-right">
       <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
@@ -107,24 +165,86 @@ text-align:center;
     <img src="images.png" class="centerImage" alt="smartsalo">
   </div>
   <div id="Page1Div"  style="display:none">
-    Page1 page
+  <h1>Heating Monitor</h1>
+  <div>
+  <form id="azureForm" onsubmit="return false;">
+     <table>
+     <tr>
+     <td>Customer Id (id/empty):<td><input type="numbers" id="inputCustomerId" size="6" maxlength="6" name="inputCustomerId">
+     <tr>
+     <td>Give dates in format:<td> ddmmyyyy
+     <tr>
+     <td>Start date:<td><input type="numbers" id="inputStartDate" size="10" maxlength="10" name="inputStartDate">
+     <tr>
+     <td>End date:<td><input type="numbers" id="inputEndDate" size="10" maxlength="10" name="inputEndDate">
+     <tr>
+     <tr>
+     <td><button id="getDataFromHub" onclick="Funct_getDataFromHub()">Get Data for Selected Day(s)</button>
+     <td><button id="getDataCountSel" onclick="Funct_getDataCount(1)">  Get Data Count for Selected Day(s)</button>
+     <tr>
+     <td><button id="getDataCountAll" onclick="Funct_getDataCount(0)">  Get Line Count in Database</button>
+     <tr>
+     <td><button id="getLatestData" onclick="Funct_getLatestData()">  Get Latest 50 Lines</button>
+     <tr>
+     <td><button id="getCustomerInfo" onclick="Funct_getCustomerInfo()">  Get Customers</button>
+     </table>
+  </form>
+  <div id="chartContainer" style="float: left"></div>
+  </div>
+  <br>
+  <div id="msg"></div><br>
+  <div id="debugMsg"></div>
+  <br>
+  <form id="userEditForm" onSubmit="return false;">
+   <fieldset>
+    <table>
+    <tr>
+    <td>Customer Id:<td><input  type="text" id="modifyCustomerId" size="30" maxlength="30" name="modifyCustomerId" readonly>
+    <tr>
+    <td>Subscription Plan:<td><input  type="text" id="modifySubscriptionPlan" size="30" maxlength="30" name="modifySubscriptionPlan">
+    <tr>
+    <td>Customer Name:<td><input  type="text" id="modifyCustomerName" size="30" maxlength="30" name="modifyCustomerName">
+    <tr>
+    <td>Customer Address:<td><input  type="text" id="modifyCustomerAddress" size="30" maxlength="30" name="modifyCustomerAddress">
+    <tr>
+    <td>City:<td><input  type="text" id="modifyCustomerCity" size="30" maxlength="30" name="modifyCustomerCity">
+    <tr>
+    <td>Zip Code:<td><input  type="text" id="modifyCustomerZip" size="30" maxlength="30" name="modifyCustomerZip">
+    <tr>
+    <td>Telepohone:<td><input  type="text" id="modifyCustomerTelephone" size="30" maxlength="30" name="modifyCustomerTelephone">
+    <tr>
+    <tr>
+    <td><button id="saveChanges" onclick="Funct_saveChanges()">Save Changes</button>
+    <tr>
+    <td><button id="renew" onclick="Funct_renew()">Renew (trial)</button>
+    </table>
+   </fieldset>
+  </form>
+  <br>
+  
+  <button id="addCustomer" onclick="Funct_addCustomer()">Add New Customer</button>
+  <div id="tempdata"></div>
+  <table id="customerData" border="1"> </table>
+
   </div>
   <div id="Page2Div"  style="display:none">
-    Page2 page
+    
   </div>
   <div id="Page3Div"  style="display:none">
-    Page3 page
+    
   </div>
   <div id="NewsDiv"  style="display:none">
-    News page
+    
   </div>
   <div id="AboutDiv"  style="display:none">
-    About page
+    
   </div>
   <div id="ProductsDiv"  style="display:none">
-    Products page <br><br>
-    <img src="gecko.jpg" alt="Gecko">
+    <br><br>
+    <!-- <img src="gecko.jpg" alt="Gecko"> -->
   </div>
+  
+  
 </body>
 
 <script>
@@ -138,6 +258,10 @@ function show_div(divName) {
   document.getElementById('AboutDiv').style.display = 'none';
   document.getElementById('ProductsDiv').style.display = 'none';
   document.getElementById(divName).style.display = '';
+}
+
+function showUserName(){
+  alert(document.getElementById('LoginName').innerText);
 }
 
 $("#Page1").click(function() {
@@ -159,12 +283,566 @@ $("#Page3").click(function() {
 $(window).load(function(){
 // At startup, this loads gameInfo from statistics source
   $(function(){
-    //document.body.style.backgroundImage = "url(images.jpg)";
+    //document.body.style.backgroundImage = "url(bg.jpg)";
     //document.body.style.backgroundImage.transparent = 50%;
     document.getElementById('messages').style.color
   })
 });
 
+  var showSentMsg = true;
+  
+  var collectData = false;
+  var savedData = null;
+  var xmlhttp;
+  var chart;
+  
+  window.onload = function () {
+    hideUserEditForm();
+    hideAddNewNewCustomer();
+    var today = new Date();
+    var dateStr = '';
+    if (today.getDate() < 10) dateStr += '0';
+    dateStr += today.getDate();
+    if (today.getMonth() + 1 < 10) dateStr += '0';
+    dateStr += (today.getMonth() + 1).toString() + today.getFullYear().toString();
+    
+    setStartDate(dateStr);
+    setEndDate(dateStr);
+    setCustomerId(1);
+    wakeupFunction();
+    //setStartDate('20042016');
+    //setEndDate('20042016');
+    createChart();
+    debugMsg.text = 'Debug Msg';
+    msg.text = 'Msg';
+    document.getElementById('LoginName').innerText ="User:Unknown"
+    getUser();
+  }
+  
+  function createChart() {
+    var graphBackgroundColor = "white" 
+	chart = new CanvasJS.Chart("chartContainer", {
+      backgroundColor: graphBackgroundColor,
+      width : 500,
+      height : 250,
+      axisY:{
+        maximum: -9999,
+        minimum: 9999,
+        interval:10
+      },
+      theme: "theme2",//theme1
+      title:{
+        text: "---"              
+      },
+
+      legend: {
+        cursor: "pointer",
+        itemclick: function (e) {
+          if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+          } else {
+            e.dataSeries.visible = true;
+          }
+          recalcScale();
+        e.chart.render();
+        }
+      },
+        animationEnabled: false,   // change to true
+		data: [              
+		{
+			// Change type to "bar", "area", "spline", "pie",etc.
+			type: "spline",
+            lineThickness: 2,
+			dataPoints: [
+				{ label: "Tammikuu",  y: -5  },
+				{ label: "Joulukuu",  y: -1  }
+			]
+		},
+		{
+			// Change type to "bar", "area", "spline", "pie",etc.
+			type: "spline",
+            lineThickness: 2,
+			dataPoints: [
+				{ label: "Tammikuu",  y: -5  },
+				{ label: "Joulukuu",  y: -1  }
+			]
+		}
+		]
+	});
+    clearCharts();
+  }
+  
+  function clearCharts(){
+    var dataIndex = 0;
+    while (chart.options.data.length) {
+      chart.options.data.pop();
+    }
+    chart.render();
+
+  }
+  
+  function setMinMaxY(minY, maxY){
+  var margin = 0;
+    chart.options.axisY.maximum = 10 * Math.floor((maxY + margin + 10) / 10);
+    chart.options.axisY.minimum = 10 * Math.floor((minY - margin) / 10);
+  }
+  
+  function addChart(title, points, legend) {
+    var maxY = -99999;
+    var minY = 99999;
+    chart.options.title.text = title;
+    for (var sensorno = 0; sensorno < 8; sensorno++) {
+      if (points[sensorno].length > 0) {
+        chart.options.data.push( {visible: true, showInLegend: true, lineThickness:2, type: "line", 
+                                  xValueType: "dateTime", markerType: "cross", markerSize:5,
+                                  fillOpacity: .4, legendText: legend[sensorno]});
+        chart.options.data[chart.options.data.length - 1].dataPoints = [];
+        for (var p = points[sensorno].length - 1; p >= 0; p--) {
+          if (points[sensorno][p].x) {
+            chart.options.data[chart.options.data.length - 1].dataPoints.push(points[sensorno][p]);
+            if (points[sensorno][p].y > maxY) {
+               maxY = points[sensorno][p].y;
+            }
+            if (points[sensorno][p].y < minY) {
+               minY = points[sensorno][p].y;
+            }
+          }
+        }
+      }
+    }
+    setMinMaxY(minY, maxY);
+    chart.render();
+  }
+  
+  function recalcScale(){
+    var maxY = -99999;
+    var minY = 99999;
+    for (ser = 0; ser < chart.options.data.length; ser++) {
+      if (chart.options.data[ser].visible == true) {
+        for (var p = 0; p < chart.options.data[ser].dataPoints.length; p++) {
+          if (chart.options.data[ser].dataPoints[p].y) {
+            if (chart.options.data[ser].dataPoints[p].y > maxY) {
+              maxY = chart.options.data[ser].dataPoints[p].y;
+            }
+            if (chart.options.data[ser].dataPoints[p].y < minY) {
+               minY = chart.options.data[ser].dataPoints[p].y;
+            }
+          }
+        }
+      }
+    }
+    setMinMaxY(minY, maxY);
+  }
+  
+  function hideUserEditForm() {
+    document.getElementById("userEditForm").style.display = "none";
+  }
+  
+  function showUserEditForm(cells) {
+    document.forms.userEditForm.modifyCustomerId.value = cells[1].innerText;
+    document.forms.userEditForm.modifySubscriptionPlan.value = cells[2].innerText;
+    document.forms.userEditForm.modifyCustomerName.value = cells[3].innerText;
+    document.forms.userEditForm.modifyCustomerAddress.value = cells[4].innerText;
+    document.forms.userEditForm.modifyCustomerCity.value = cells[5].innerText;
+    document.forms.userEditForm.modifyCustomerZip.value = cells[6].innerText;
+    document.forms.userEditForm.modifyCustomerTelephone.value = cells[7].innerText;
+    document.getElementById("userEditForm").style.display = "";
+  }
+  function hideAddNewNewCustomer() {
+    document.getElementById('addCustomer').style.display = 'none';
+  }
+  function showAddNewNewCustomer() {
+    document.getElementById('addCustomer').style.display = '';
+  }
+  function clearMessage() {
+    // clears the notice message
+    showMessage('');
+  }
+  function showCommand(msg) {
+    // sets notice message
+	//document.getElementById('debugMsg').innerText = msg;
+  }
+  function showMessage( msg) {
+    // sets notice message
+	document.getElementById('msg').innerText = msg;
+  }
+  
+  function isNumeric(val) {
+    return Number(parseFloat(val))==val;
+  }
+  
+  function isValidDate(d) {
+  var status = 0;
+    if (d.length == 8) {
+      if (isNaN(d) == false) {
+        // all numbers
+        var day = Number(d.substring(0,2));
+        var month = Number(d.substring(2,4) - 1);
+        var year = Number(d.substring(4,8));
+        var date = new Date(year, month, day);
+        if (!isNaN(date)) {
+          var d = date.getDate();
+          var m = date.getMonth();
+          var y = date.getFullYear();
+          if (date.getMonth() == month && date.getDate() == day && date.getFullYear() == year) {
+            status = date.getTime();
+          }
+        }
+      }
+    }
+    return status;
+  }
+  
+  function getCustomerId() {
+    return document.forms.azureForm.inputCustomerId.value;
+  }
+
+  function setCustomerId(id) {
+    document.forms.azureForm.inputCustomerId.value = id;
+  }
+  
+  function setStartDate(date) {
+    document.forms.azureForm.inputStartDate.value = date;
+  }
+  
+  function setEndDate(date) {
+    document.forms.azureForm.inputEndDate.value = date;
+  }
+  
+  function getDates() {
+    var startDate = document.forms.azureForm.inputStartDate.value.trim();
+    var endDate = document.forms.azureForm.inputEndDate.value.trim();
+    var datesOk = false;
+    var sDateMs = isValidDate(startDate);
+    var eDateMs = 0;
+    if (sDateMs > 0){
+      eDateMs = isValidDate(endDate);
+      eDateMs += 1000.0 * 3600 * 24;
+      if (eDateMs > sDateMs) {
+        datesOk = true;
+      }
+    }
+    return ({status:datesOk,startDate:sDateMs, endDate:eDateMs});
+  }
+  
+  function Funct_getDataFromHub() {
+    clearMessage();
+    hideUserEditForm();
+    hideAddNewNewCustomer();
+    var d = getDates();
+    var custId = getCustomerId();
+    if (d.status == true && (isNumeric(custId) || custId == '')) {
+      // clear customer data from table
+      var table = document.getElementById('customerData');
+      var requestMsg = 'index' + '?custid=' + custId + '&start=' + d.startDate + '&end=' + d.endDate + '&rnd=' + Math.random();
+      while (table.rows.length > 0) {
+        table.deleteRow(0);
+      }      
+      clearCharts();
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = callbackGetData;
+        if (showSentMsg) showCommand(requestMsg);
+        xmlhttp.open("GET", requestMsg, true);
+        xmlhttp.send();
+      }else {
+      showMessage('Invalid input data given!');
+    }
+  }
+
+  function callbackGetData() {
+    if (xmlhttp.readyState == 4) {
+      if(xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        if (data.length > 1) {
+          if (data[0].MaxCount < data.length) {
+            showMessage('Only first ' + data[0].MaxCount + ' lines returned');
+          }
+          else {
+            showMessage(data.length - 1 + ' lines returned!');
+          }
+          
+          var table = document.getElementById('customerData');
+          var rowNo = 0;
+        
+          var d = data[1];
+          var keys = Object.keys(d);
+
+          var header = table.createTHead();
+          var hr = header.insertRow(0);
+          hr.insertCell(0);
+          for (var i = 0; i < keys.length;i++) {
+            var hc = hr.insertCell(i + 1);
+            hc.innerText = keys[i];
+          }
+          var body = table.createTBody();
+          var lastTime;
+          var dataTable = [];
+          var sensors = [];
+          var sensorFound = [];
+          for (sensorNo = 0; sensorNo < 8; sensorNo++) {
+            dataTable[sensorNo] = [];
+            sensors[sensorNo] = 'sensor' + sensorNo;
+            sensorFound[sensorNo] = false;
+          }
+          for (var index = 1; index < data.length; index++) {
+            var row = body.insertRow(rowNo);
+            var cell;
+            var dataItem = data[index];
+            var fieldNo = 0;
+            cell = row.insertCell(0);
+            cell.innerText = index;
+            for (sensorNo = 0; sensorNo < 8; sensorNo++) {
+              dataTable[sensorNo].push({x: null, y: null}); // label
+            }            
+            for (var key in d) {
+              cell = row.insertCell(fieldNo + 1);
+              if (dataItem[key] === null) {
+                cell.innerText = 'NaN';
+              } else {
+                if (dataItem[key].type == 'Buffer')
+                {
+                  var te = '';
+                  for (var k = 0; k < dataItem[key].data.length; k++) {
+                    if (k > 0) te += ',';
+                    te = te + dataItem[key].data[k];
+                  }
+                  cell.innerText = te;
+                } else {
+                  if (keys[fieldNo] == 'meas_time') {
+                    var dt = new Date(dataItem[key])
+                    cell.innerText = dt;
+                    //lastTime = dt.getDay() + "/" + dt.getMonth() + "\n" + + dt.getHours() + ":" + dt.getMinutes();
+                    lastTime = dt;
+                  } else {
+                    if (keys[fieldNo].indexOf('sensor') == 0) {
+                      var regex = /\d+/g;
+                      var matches = keys[fieldNo].match(regex);  
+                      var sindex = Number(matches[0]);
+                      sensorFound[sindex] = true;
+                      if (dataItem[key] == '') {
+                        dataTable[sindex].push({x: lastTime, y: null}); // label
+                      } else {
+                         dataTable[sindex][dataTable[sindex].length - 1].x = lastTime; // label
+                         dataTable[sindex][dataTable[sindex].length - 1].y = dataItem[key];
+                      }
+                    }
+                    cell.innerText = dataItem[key];
+                  }
+                }
+              }
+              fieldNo++;
+            }
+            rowNo++;
+          }
+          for (sensorNo = 0; sensorNo < 8; sensorNo++){
+            if (sensorFound[sensorNo] == false) {
+              while (dataTable[sensorNo].length > 0) {
+                dataTable[sensorNo].pop();
+              }
+            }
+          }
+          addChart('Requested data', dataTable, sensors);
+          if (collectData) {
+            collectData = false;
+            savedData = data;
+            addRowHandlersToTable('customerData');
+          }
+          else savedData = null;
+        } else {
+           if (data.length == 1) {
+             var keys = Object.keys(data[0]);
+             var vals = Object.keys(data[0]).map(function (key) {
+               showMessage(keys[0] + ':' + data[0][key]);
+             });
+
+           } else {
+             showMessage('Empty data received');
+           }
+        }
+      }
+    }
+  }   
+var countMode = 0;  
+  function Funct_getDataCount(mode) {
+    countMode = mode;
+    clearMessage();
+    hideUserEditForm();
+    var d = getDates();
+
+    var requestMsg = 'count' + '?rnd=' + Math.random();
+    if (mode != 0 && d.status == true){
+      requestMsg = 'count' + '?start=' + d.startDate + '&end=' + d.endDate + '&rnd=' + Math.random();
+    }
+    //showMessage(requestMsg);
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackGetCount;
+    if (showSentMsg) showCommand(requestMsg);
+    xmlhttp.open("GET", requestMsg, true);
+    xmlhttp.send();
+  }
+ 
+  function callbackGetCount() {
+    if (xmlhttp.readyState == 4) {
+      if(xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        if (countMode == 0) {
+          showMessage('Records in database:' + data.Linecount);
+        } else {
+          showMessage('Records in given date range:' + data.Linecount);
+        }
+      }
+    }
+  }    
+  
+  function Funct_getLatestData() {
+    clearMessage();
+    hideUserEditForm();
+    hideAddNewNewCustomer();
+    var d = {status : true, startDate : 0, endDate : 0};
+    
+    if (d.status == true) {
+      // clear customer data from table
+      clearCharts();
+      var table = document.getElementById('customerData');
+      while (table.rows.length > 0) {
+        table.deleteRow(0);
+      }      
+      
+      xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = callbackGetData;
+      var requestMsg = 'index' + '?start=' + 0 + '&end=' + 0 + '&rnd=' + Math.random();
+      if (showSentMsg) showCommand(requestMsg);
+      xmlhttp.open("GET", requestMsg, true);
+
+      xmlhttp.send();
+    }else {
+      showMessage('Invalid dates given!');
+    }
+  } 
+  
+  function Funct_addCustomer() {
+    alert('Not implemented ;\)');
+  }
+
+  function Funct_saveChanges() {
+    alert('Not implemented ;\)');
+  }
+
+function Funct_renew() {
+  xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = callbackRenew;
+  var requestMsg = 'renew' + '?id=' + 'kukku' + '&rnd=' + Math.random();
+  if (showSentMsg) showCommand(requestMsg);
+  xmlhttp.open("GET", requestMsg, true);
+
+  xmlhttp.send();
+}
+function callbackRenew() {
+    if (xmlhttp.readyState == 4) {
+      if(xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        //showMessage(data);
+        document.getElementById('tempdata').innerText = data;
+      }
+    }
+  }    
+
+  function Funct_getCustomerInfo() {
+    clearMessage();
+    hideUserEditForm();
+    showAddNewNewCustomer();
+    var d = {status : true, startDate : 0, endDate : 0};
+    
+    if (d.status == true) {
+      // clear customer data from table
+      clearCharts();
+      var table = document.getElementById('customerData');
+      while (table.rows.length > 0) {
+        table.deleteRow(0);
+      }      
+      
+      xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = callbackGetData;
+      var requestMsg = 'customer' + '?name=' + '' + '&id=' + '' + '&rnd=' + Math.random();
+      if (showSentMsg) showCommand(requestMsg);
+      xmlhttp.open("GET", requestMsg, true);
+
+      xmlhttp.send();
+      collectData = true;
+    }else {
+      showMessage('Invalid dates given!');
+    }
+  }
+  
+function handleUserCell(){ return function(){
+               var id = this.innerHTML;
+               //alert(id);
+               showUserEditForm(this.parentNode.cells);
+               };}
+
+  function handleUser(){ return function(){
+               var id = this.cells[3].innerHTML;
+               //alert(id);
+               showUserEditForm(this.cells);
+               };}
+               
+  function addRowHandlersToTable(tableId) {
+    var i;
+    var rows = document.getElementById(tableId).rows;
+    for (i = 1; i < rows.length; i++) {
+      rows[i].cells[2].onclick = function() { return handleUserCell();}(rows[i]);
+      rows[i].cells[3].onclick = function() { return handleUserCell();}(rows[i]);
+      rows[i].ondblclick = function() { return handleUser();}(rows[i]);
+              
+    }
+  }
+/*    rows[i].ondblclick = function(){ return function(){
+               var id = this.cells[3].innerHTML;
+               //alert(id);
+               showUserEditForm(this.cells);
+               };}*/
+  var wakeupCount = 0;
+
+  function wakeupFunction() {
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = wakeupCallback;
+    var requestMsg = 'wakeup' + '?rnd=' + Math.random();
+    xmlhttp.open("GET", requestMsg, true);
+    xmlhttp.send();
+
+    wakeupServer();
+  }
+
+  function wakeupCallback() {
+    if (xmlhttp.readyState == 4) {
+      if(xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        showCommand('--- WAKEUP ---' + wakeupCount++ + '---');
+      }
+    }
+  } 
+  
+  function wakeupServer() {
+    setTimeout( wakeupFunction, 10.0 * 600000.0);
+  }
+
+  function getUser() {
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackGetUser;
+    var requestMsg = 'user' + '?rnd=' + Math.random();
+    if (showSentMsg) showCommand(requestMsg);
+    xmlhttp.open("GET", requestMsg, true);
+    xmlhttp.send();
+  }
+  
+  function callbackGetUser() {
+    if (xmlhttp.readyState == 4) {
+      if(xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        document.getElementById('LoginName').innerText ="User:" + data.User;
+      }
+    }
+  }    
 
 </script>
 <!----------------------------------------------------------->
