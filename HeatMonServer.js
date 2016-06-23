@@ -6,6 +6,7 @@ var sql = require('./sqlServer');
 //var https = require('https');
 var http = require('http');
 const fs = require('fs');
+var basicAuth = require('basic-auth');
 
 var showHttpRequest = true;
 var errorMessage = {};
@@ -18,14 +19,66 @@ var DatabaseConfig = {
     options: {encrypt: true, database: 'HeatingMonDB'}
   };
 
+var auth = function (req, res, next) {
+  function unauthorized(res) {  // yleinen vastaus jos ei onnistu
+    res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+    return res.sendStatus(401);
+  };
+  var user = basicAuth(req);
+  if (!user || !user.name || !user.pass) {  // ei tunnuksia
+    return unauthorized(res);
+  };
+  if (user.name == 'fool' && user.pass == 'bar') {
+    return next();   // ohjaa toiminnan eteenpäin
+  } else {
+    return unauthorized(res);
+  };
+};
+var auth2 = function (req, res, next) {
+  function unauthorized(res) {  // yleinen vastaus jos ei onnistu
+    res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+    return res.sendStatus(401);
+  };
+  var user = basicAuth(req);
+  if (!user || !user.name || !user.pass) {  // ei tunnuksia
+    return unauthorized(res);
+  };
+  if (user.name == 'mmm' && user.pass == 'mmm') {
+    return next();   // ohjaa toiminnan eteenpäin
+  } else {
+    return unauthorized(res);
+  };
+};
+
+  function addMessageToLog( buff){      
+    var d = new Date();
+    fs.appendFile('log.txt', d + ': ' + buff + '\n\r', function (err) {
+      if (err) return console.log(err);
+        console.log('log.txt updated');
+    });
+  }
+
+
 // ------------------------------------------------------------
 //    Api interface functions
 // ------------------------------------------------------------
   
   
-  app.get('/', function(request, response){
-    if (showHttpRequest) console.log('---Request:azureServer ----------');
-    response.sendFile('HeatMonitor.html' , { root : __dirname});
+  app.get("/", function (request, response) {
+    if (showHttpRequest) console.log('---Request:azureServer ----------HeatingMon.html');
+    response.sendFile('HeatingMon.html' , { root : __dirname});
+  });
+  
+  app.get("/user", function(request, response){
+    if (showHttpRequest) console.log('---Request:user ----------');
+    var client = request.headers['x-ms-client-principal-name'];
+    if (typeof client === 'undefined') {
+      client = "Undefined"
+    }
+    if (client == "") {
+      client = "None"
+    }
+    response.json({"User":client});
   });
   
   app.get('/wakeup', function(request, response){
@@ -49,7 +102,7 @@ var DatabaseConfig = {
     }
   });
   
-  app.get('/customer', function(req, res) {
+  app.get('/customer', auth2, function(req, res) {
     var params;
     params = getQueryParams(req.query, {'name':false,'id':false});
     var errorMsg = checkParameterStatus(params)
@@ -62,13 +115,16 @@ var DatabaseConfig = {
     }
   });
   
-  app.get('/count', function(req, res) {
+  app.get('/count', auth, function(req, res) {
     /*
       Function gets count of records.
       If start and end parameters given result is count between them,
       otherwise count of all data in database.
     */
     var params;
+    var client = req.headers['x-ms-client-principal-name'];
+    addMessageToLog(client);
+    
     params = getQueryParams(req.query, {'start':false, 'end':false});
     var errorMsg = checkParameterStatus(params)
     if (errorMsg == null) {
@@ -83,6 +139,22 @@ var DatabaseConfig = {
   app.get('/kukku', function(req, res) {
     console.log('kukkuuu');
     res.sendFile('empty.html' , { root : __dirname});
+  });
+  app.get('/gecko.jpg', function(req, res) {
+    console.log('kukkuuu');
+    res.sendFile('gecko.jpg' , { root : __dirname});
+  });
+  app.get('/images.jpg', function(req, res) {
+    console.log('kukkuuu');
+    res.sendFile('images.jpg' , { root : __dirname});
+  });
+  app.get('/bg.jpg', function(req, res) {
+    console.log('kukkuuu');
+    res.sendFile('bg.jpg' , { root : __dirname});
+  });
+  app.get('/images.png', function(req, res) {
+    console.log('kukkuuu');
+    res.sendFile('images.png' , { root : __dirname});
   });
 
   app.get('/renew', function(req, res) {
@@ -192,6 +264,12 @@ var DatabaseConfig = {
 
   sql.createConnection(DatabaseConfig);
   
+  var d = new Date();
+  console.log('Now:' + d + '  ' + d.getTime())
+  d = new Date(2016, 0, 1, 2)
+  console.log(d + '  ' + d.getTime())
+  d = new Date(1970, 0, 1, 2, 0)
+  console.log(d + '  ' + d.getTime())
   
   
   console.log('Connecting to port: ' + portToUse);
