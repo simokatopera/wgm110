@@ -7,6 +7,7 @@ var sql = require('./sqlServer');
 var http = require('http');
 const fs = require('fs');
 var basicAuth = require('basic-auth');
+//var passport = require('passport-azure-ad');
 
 var showHttpRequest = true;
 var errorMessage = {};
@@ -19,6 +20,7 @@ var DatabaseConfig = {
     options: {encrypt: true, database: 'HeatingMonDB'}
   };
 
+/*
 var auth = function (req, res, next) {
   function unauthorized(res) {  // yleinen vastaus jos ei onnistu
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
@@ -34,22 +36,54 @@ var auth = function (req, res, next) {
     return unauthorized(res);
   };
 };
-var auth2 = function (req, res, next) {
-  function unauthorized(res) {  // yleinen vastaus jos ei onnistu
-    res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-    return res.sendStatus(401);
-  };
-  var user = basicAuth(req);
-  if (!user || !user.name || !user.pass) {  // ei tunnuksia
-    return unauthorized(res);
-  };
-  if (user.name == 'mmm' && user.pass == 'mmm') {
-    return next();   // ohjaa toiminnan eteenpäin
-  } else {
-    return unauthorized(res);
-  };
-};
+*/
+///*
+var auth = function (req, res, next) {
 
+  function unauthorized(res) {  // yleinen vastaus jos ei onnistu
+    //res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+    res.statusMessage = 'Basic realm=Authorization Required';
+    return res.sendStatus(401);
+    //res.statusMessage = "WWW-Authenticate', 'Basic realm=Authorization Required";
+    //res.status(401).end();
+  };
+
+  var authLevel = 1;
+  addMessageToLog('Authentication requested');
+  if (sql.authorizationNeeded(req, authLevel) == true) {
+    addMessageToLog('Authentication needed');
+    var user = basicAuth(req);
+    if (!user || !user.name || !user.pass) {  // ei tunnuksia
+      addMessageToLog('Login unauthorized:');
+      if (user) {
+        if (user.name){
+          addMessageToLog('User:' + user.name);
+        }
+        else {
+          addMessageToLog('No User name');
+        }
+        if (user.pass){
+          addMessageToLog('Pass:' + user.pass);
+        }
+        else {
+          addMessageToLog('No pass');
+        }
+      }
+      else {
+        addMessageToLog('No User at all');
+      }
+      return unauthorized(res);
+    };
+    if (user.name == 'kuukku' && user.pass == "vaan"){
+    //if (sql.checkUser(req, user.name, user.pass, authLevel)) {
+      return next();   // ohjaa toiminnan eteenpäin
+    } else {
+      res.statusMessage = "Only admin privileges accepted!";
+      res.status(401).end();
+    }
+  }
+};
+//*/
   function addMessageToLog( buff){      
     var d = new Date();
     fs.appendFile('log.txt', d + ': ' + buff + '\n\r', function (err) {
@@ -58,19 +92,7 @@ var auth2 = function (req, res, next) {
     });
   }
 
-
-// ------------------------------------------------------------
-//    Api interface functions
-// ------------------------------------------------------------
-  
-  
-  app.get("/", function (request, response) {
-    if (showHttpRequest) console.log('---Request:azureServer ----------HeatingMon.html');
-    response.sendFile('HeatingMon.html' , { root : __dirname});
-  });
-  
-  app.get("/user", function(request, response){
-    if (showHttpRequest) console.log('---Request:user ----------');
+  function getClientPrincipalName(request) {
     var client = request.headers['x-ms-client-principal-name'];
     if (typeof client === 'undefined') {
       client = "Undefined"
@@ -78,6 +100,63 @@ var auth2 = function (req, res, next) {
     if (client == "") {
       client = "None"
     }
+    return client; 
+  }
+// ------------------------------------------------------------
+//    Api interface functions
+// ------------------------------------------------------------
+ 
+ 
+  app.get("/", function (request, response) {
+    if (showHttpRequest) console.log('---Request:azureServer ----------HeatingMon.html');
+    response.sendFile('HeatingMon.html' , { root : __dirname});
+  });
+  
+  
+  //app.get('/login', passport.authenticate('azuread-openidconnect', { failureRedirect: '/login' }), function(req, res) {
+  app.get('/login', function(req, res) {
+    if (showHttpRequest) console.log('---Request:Login ----------');
+    //addMessageToLog('Request:Login');
+    //log.info('Login was called in the Sample');
+    res.redirect('/');
+  });
+  
+  
+  app.get('/logout', function(req, res){
+    /*
+    if (showHttpRequest) console.log('---Request:Logout ----------');
+    // We need to go to website https://heatingmon.azurewebsites.net/.auth/logout
+    // to get logged out !
+    //addMessageToLog('Request:Logout');
+    var referer = req.headers['referer'];
+    if (typeof referer !== 'undefined') {
+      //addMessageToLog('Referer:' + referer);
+      console.log("Referer: " + referer);
+      //if (referer.indexOf("localhost") < 0) {
+        //addMessageToLog('Trying to log out:');
+        //addMessageToLog('logout');
+        req.logout();
+        //res.redirect('/');
+        //addMessageToLog('redirect');
+        //res.redirect('https://heatingmon.azurewebsites.net/.auth/logout');
+        //addMessageToLog('resp');
+        //res.json({"Logout":"Done"});
+        return;
+      //}
+    }
+    */
+    res.json({"Logout":"Not done"});
+  });
+  
+  app.get("/user", function(request, response){
+    if (showHttpRequest) console.log('---Request:user ----------');
+    var client = getClientPrincipalName(request);
+    //console.log(request.rawHeaders);
+    //console.log('------------------------')
+    //console.log(request.headers);
+    //console.log('------------------------')
+    //addMessageToLog('Authorization:' + request.headers.authorization);
+    //addMessageToLog(JSON.stringify(request.headers));
     response.json({"User":client});
   });
   
@@ -102,28 +181,56 @@ var auth2 = function (req, res, next) {
     }
   });
   
-  app.get('/customer', auth2, function(req, res) {
-    var params;
-    params = getQueryParams(req.query, {'name':false,'id':false});
-    var errorMsg = checkParameterStatus(params)
-    if (errorMsg == null) {
-      showDebugMsg('/customer', params);
-      sql.getCustomerData(0, params, function(data){res.json(data);});
-    }
-    else {
-      res.json(errorMsg);
-    }
+  app.get('/userInfo', function(req, res) {
+    // read admin data
+    var buffer = [];
+    sql.checkUser2(req, 99, function(data){
+      if (data && data.length > 0){
+         buffer.push({"Admin info":data[0]});
+      }
+      sql.getUserInfo(req, function(data){
+         console.log(data);
+        if (data && data.length > 0){
+          buffer.push({"Customer info":data[0]});
+        }
+        res.json(buffer);
+      });
+    });
   });
   
-  app.get('/count', auth, function(req, res) {
+  app.get('/customer', function(req, res) {
+    sql.checkUser2(req, 1, function(data){
+      //console.log(data);
+      
+      if (data && data.length > 0){ 
+        //console.log('User authorized-----------');
+        var params;
+        params = getQueryParams(req.query, {'name':false,'id':false});
+        var errorMsg = checkParameterStatus(params)
+        if (errorMsg == null) {
+          showDebugMsg('/customer', params);
+          sql.getCustomerData(0, params, function(data){res.json(data);});
+        }
+        else {
+          res.json(errorMsg);
+        }
+      } else {
+        var buffer = [];
+        buffer.push({'Error':'No privileges'});
+        res.json(buffer);
+      }
+    });
+  });
+  
+  app.get('/count', function(req, res) {
     /*
       Function gets count of records.
       If start and end parameters given result is count between them,
       otherwise count of all data in database.
     */
     var params;
-    var client = req.headers['x-ms-client-principal-name'];
-    addMessageToLog(client);
+    //var client = getClientPrincipalName(req);
+    //addMessageToLog(client);
     
     params = getQueryParams(req.query, {'start':false, 'end':false});
     var errorMsg = checkParameterStatus(params)
@@ -137,23 +244,23 @@ var auth2 = function (req, res, next) {
   });
   
   app.get('/kukku', function(req, res) {
-    console.log('kukkuuu');
+    console.log('kukku');
     res.sendFile('empty.html' , { root : __dirname});
   });
   app.get('/gecko.jpg', function(req, res) {
-    console.log('kukkuuu');
+    console.log('gecko.jpg');
     res.sendFile('gecko.jpg' , { root : __dirname});
   });
   app.get('/images.jpg', function(req, res) {
-    console.log('kukkuuu');
+    console.log('images.jpg');
     res.sendFile('images.jpg' , { root : __dirname});
   });
   app.get('/bg.jpg', function(req, res) {
-    console.log('kukkuuu');
+    console.log('bg.jpg');
     res.sendFile('bg.jpg' , { root : __dirname});
   });
   app.get('/images.png', function(req, res) {
-    console.log('kukkuuu');
+    console.log('images.png');
     res.sendFile('images.png' , { root : __dirname});
   });
 
@@ -164,8 +271,8 @@ var auth2 = function (req, res, next) {
     if (errorMsg == null) {
       showDebugMsg('/renew', params);
       //sql.getCount(0, params, function(data){res.json(data);});
-      console.log(req.rawHeaders);
-      res.json(req.rawHeaders);
+      //console.log(req.rawHeaders);
+      //res.json(req.rawHeaders);
       
       //var fs = require('fs');
       //fs.writeFile("header.txt", JSON.stringify(req), function(err) {
