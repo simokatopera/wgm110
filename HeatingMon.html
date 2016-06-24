@@ -42,7 +42,7 @@ state=nonce%3de599313de7034b5480e56896a22919ae_20160622104516%26redir%3d/
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/jquery.canvasjs.min.js"></script>  
   
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.min.js"></script>
+<!--  <script src="http://cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.min.js"></script> -->
   
   <div class="container">
     <h1>  </h1>
@@ -149,11 +149,11 @@ text-align:center;
       <li><a onclick="show_div('ProductsDiv')">Products</a></li> 
       <li><a onclick="show_div('NewsDiv')">News</a></li> 
       <li><a onclick="show_div('AboutDiv')">About</a></li> 
-      <li><a onclick="showUserName()" id="LoginName">xxxxx</a></li> 
+      <li><a onclick="showUserInfo()" id="LoginName">xxxxx</a></li> 
     </ul>
     <ul class="nav navbar-nav navbar-right">
       <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
-      <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+      <li><a onclick="logOut()"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
     </ul>    
   </div>
 </nav>
@@ -260,9 +260,6 @@ function show_div(divName) {
   document.getElementById(divName).style.display = '';
 }
 
-function showUserName(){
-  alert(document.getElementById('LoginName').innerText);
-}
 
 $("#Page1").click(function() {
   show_div('Page1Div');
@@ -295,7 +292,7 @@ $(window).load(function(){
   var savedData = null;
   var xmlhttp;
   var chart;
-  
+
   window.onload = function () {
     hideUserEditForm();
     hideAddNewNewCustomer();
@@ -308,7 +305,7 @@ $(window).load(function(){
     
     setStartDate(dateStr);
     setEndDate(dateStr);
-    setCustomerId(1);
+    //setCustomerId(1);
     wakeupFunction();
     //setStartDate('20042016');
     //setEndDate('20042016');
@@ -660,6 +657,9 @@ $(window).load(function(){
            }
         }
       }
+      else {
+        showMessage("Error:" + xmlhttp.status + ":" + xmlhttp.statusText);
+      }
     }
   }   
 var countMode = 0;  
@@ -842,8 +842,46 @@ function handleUserCell(){ return function(){
         document.getElementById('LoginName').innerText ="User:" + data.User;
       }
     }
-  }    
+  }
+  
+  function logOut(){
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackGetLogout;
+    var requestMsg = 'logout' + '?rnd=' + Math.random();
+    if (showSentMsg) showCommand(requestMsg);
+    xmlhttp.open("GET", requestMsg, true);
+    xmlhttp.send();
+  }
+  
+  function callbackGetLogout() {
+    if (xmlhttp.readyState == 4) {
+      if(xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        showMessage(xmlhttp.responseText);
+      }
+    }
+  }
+  
+  function showUserInfo(){
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackUserInfo;
+    var requestMsg = 'userInfo' + '?rnd=' + Math.random();
+    if (showSentMsg) showCommand(requestMsg);
+    xmlhttp.open("GET", requestMsg, true);
+    xmlhttp.send();
+  }
 
+  function callbackUserInfo() {
+    if (xmlhttp.readyState == 4) {
+      if(xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        //showMessage(xmlhttp.responseText);
+        alert(xmlhttp.responseText);
+      }
+    }
+  }
+  
+  
 </script>
 <!----------------------------------------------------------->
 <!--------------------------->
