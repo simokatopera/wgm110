@@ -1,10 +1,12 @@
 
 var Connection = require('tedious').Connection;
 var Request = require('tedious').Request;
+const fs = require('fs');
 
 var SqlConnection = null;
 var dataTable = 'MEASUREMENTS';
 var customerTable = 'CUSTOMER_DATA';
+var adminTable = 'ADMINISTRATOR';
 var topAmountOfLines = 500;
 var dataBuffer = [];
 var showSqlMessages = true;
@@ -19,6 +21,10 @@ function createConnection(config) {
   SqlConnection.on('end', function() {
     console.log('Failure in connection to database: ' + config.server);
   });
+}
+
+function cancelConnection() {
+  SqlConnection.cancel(); 
 }
 
 function readTable(mode, params, callback) {
@@ -59,9 +65,15 @@ function getCount(mode, params, callback) {
   if (showSqlMessages) console.log("Sending:" + reqStr.message);
         
   var request = new Request(reqStr.message, function(err) {
+    //console.log('----------query finished------------');
     if (err) {
       console.log(err);
-      res.json({"Error":err});
+      var newdata = {"Error":err};
+      callback(newdata);      
+    }
+    else {
+      var newdata = {Linecount:count};
+      callback(newdata);
     }
   });
         
@@ -75,15 +87,11 @@ function getCount(mode, params, callback) {
 
   request.on('doneProc', function(rowCount, more) {
     if (showResultStatus) console.log(count + ' rows returned');
-    var newdata = {Linecount:count};
-    callback(newdata);
 
     if (showResultStatus) console.log(newdata);
   });
   if (SqlConnection) SqlConnection.execSql(request);
 }
-
-
 
 function createSelectByDatesMessage(custid, startkey, endkey, dTable) {
   var reqStr = {};
@@ -132,6 +140,10 @@ function executeDBStatement(dBreqStr,callback) {
     function(err) {
       if (err) {
         console.log(err);
+        var newdata = {"Error":err};
+        callback(newdata);      
+      } else {
+        callback(dataBuffer);
       }
     });
             
@@ -153,6 +165,7 @@ function executeDBStatement(dBreqStr,callback) {
     var value;
     for (var i = 0; i < dBreqStr.tableColumn.length; i++) {
       value = line[i];
+      //console.log('Value'+i+':'+line[i])
       if (dBreqStr.tableColumn[i].indexOf('sensor') >= 0){
         if (isNumeric(line[i])){
           value = Math.round(100.0 * line[i]) / 100;
@@ -168,7 +181,6 @@ function executeDBStatement(dBreqStr,callback) {
 
   request.on('doneProc', function(rowCount, more) {
     if (showResultStatus) console.log(count + ' rows returned');
-    callback(dataBuffer);
   });
   if (SqlConnection) SqlConnection.execSql(request);
 }
@@ -195,10 +207,31 @@ function getCustomerData(mode, params, callback) {
   dataBuffer.push({MaxCount:topAmountOfLines});
   getCustomers(mode, key, callback);    
 }
-  
+
+function getAdmin(username, level, callback) {
+  var dTable = adminTable;
+  var reqStr = {};
+  clearBuffer();
+  reqStr.tableColumn = ['Email1','DateStart','DateEnd','AccessLevel'];
+  reqStr.message = 'SELECT ' + ' ';
+  for (var index = 0; index < reqStr.tableColumn.length; index++) {
+    if (index > 0)reqStr.message += ', ';
+    reqStr.message += dTable + '.' + reqStr.tableColumn[index];
+  }  
+ reqStr.message += ' FROM ' + dTable +
+                   " WHERE UPPER("  + dTable + ".Email1) = '" + username.toUpperCase() + 
+                  "' AND " + dTable + ".AccessLevel <= " + level;
+    
+  if (showSqlMessages) console.log("Sending:" + reqStr.message);
+
+  executeDBStatement(reqStr, callback);
+}
+
+
+
 function getCustomers(mode, key, callback) {
   /*
-  Function executes given database reques and send results back
+  Function executes given database request and sends results back
   as json message.
   */
   var dTable = customerTable;
@@ -207,7 +240,7 @@ function getCustomers(mode, key, callback) {
   var count = 0;
   var line = [];
   reqStr.tableColumn = ['cust_id','cust_subscription_plan','cust_name','cust_address',
-                        'cust_city','cust_zip_code','cust_tel'];
+                        'cust_city','cust_zip_code','cust_tel','cust_email'];
   reqStr.message = 'SELECT ' + ' ';
   for (var index = 0; index < reqStr.tableColumn.length; index++) {
     if (index > 0)reqStr.message += ', ';
@@ -223,6 +256,10 @@ function getCustomers(mode, key, callback) {
     function(err) {
       if (err) {
         console.log(err);
+        var newdata = {"Error":err};
+        callback(newdata);      
+      } else {
+        callback(dataBuffer);
       }
     });
             
@@ -252,11 +289,84 @@ function getCustomers(mode, key, callback) {
 
   request.on('doneProc', function(rowCount, more) {
     if (showResultStatus) console.log(count + ' rows returned');
-    callback(dataBuffer);
   });
   if (SqlConnection) SqlConnection.execSql(request);
 }
+
+function addMessageToLog( buff){      
+  var d = new Date();
+  fs.appendFile('log.txt', 'SqlServer:' + d + ': ' + buff + '\n\r', function (err) {
+    if (err) return console.log(err);
+    console.log('log.txt updated');
+  });
+}
+
+function checkUser(request, username, pw, authLevel) {
+  var username = request.headers['x-ms-client-principal-name'];
+  if (username == 'simo.katopera@hotmail.om') {
+    if (pw == 'kukku') {
+      return true; 
+    }
+  }
+  return false;
+}
+
+function checkUser2(request, authLevel, callback) {
+  var username = request.headers['x-ms-client-principal-name'];
+  var host = request.headers['host'];
+  if (typeof host === 'undefined') {
+    return false;
+  }
+  if (host.indexOf("localhost") >= 0) {
+    //return true;
+    // This is for debugging on local host
+    username = "simo.katopera@hotmail.com";
+  }
   
+  // check from database if user administrator authority is high enough
+  var adminStatus = getAdmin(username, authLevel, callback);
+  return adminStatus;
+}
+
+function getUserInfo(request, callback) {
+  var dTable = customerTable;
+  var reqStr = {};
+  var username = request.headers['x-ms-client-principal-name'];
+  if (typeof username === 'undefined') {
+    // for debugging..
+    username = 'simo.katopera@hotmail.com';
+  }
+  clearBuffer();
+  reqStr.tableColumn = ['cust_id','cust_subscription_plan','cust_name','cust_address',
+                        'cust_city','cust_zip_code','cust_tel','cust_email'];
+  reqStr.message = 'SELECT ' + ' ';
+  for (var index = 0; index < reqStr.tableColumn.length; index++) {
+    if (index > 0)reqStr.message += ', ';
+    reqStr.message += dTable + '.' + reqStr.tableColumn[index];
+  }
+ 
+  reqStr.message +=
+                       ' FROM ' + dTable +
+                       " WHERE UPPER("  + dTable + ".cust_email) = '" + username.toUpperCase() + "'";
+    
+  if (showSqlMessages) console.log("Sending:" + reqStr.message);
+
+  executeDBStatement(reqStr, callback);
+}
+
+function authorizationNeeded(request, authLevel) {
+  var username = request.headers['x-ms-client-principal-name'];
+  var host = request.headers['host'];
+  if (typeof host === 'undefined') {
+    return true;
+  }
+  if (host.indexOf("localhost") >= 0) {
+    return false;
+  }
+  
+  return true;
+}
+
 function clearBuffer() {
   while (dataBuffer.length > 0) {
     dataBuffer.pop();
@@ -269,7 +379,11 @@ function isNumeric(val) {
 
   
 exports.createConnection = createConnection;
+//exports.cancelConnection = cancelConnection;
 exports.readTable = readTable;
 exports.getCount = getCount;
 exports.getCustomerData = getCustomerData;
-
+exports.authorizationNeeded = authorizationNeeded;
+exports.checkUser = checkUser;
+exports.checkUser2 = checkUser2;
+exports.getUserInfo = getUserInfo;
